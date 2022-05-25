@@ -36,10 +36,10 @@ func ProcessRead(readInfo ReadHolder) (Trios, error) {
 	output.CellBC = cellBC
 	output.Umi = umi
 	// Fuzzy match for thr tripBC
-	beforePBC := "AAGTAATCTAGA"
-	afterPBC := "GTCGAGATAA"
-	beforeRBC := "CTATACGAAGTTATG"
-	afterRBC := "GCTTTAAGGCCGGTCC"
+	beforePBC := "AGTAACTGCGAT"
+	afterPBC := "AAGGAACCCG"
+	beforeRBC := "TACCGGTATCGC"
+	afterRBC := "GGCCGCTAAG"
 	coordinates, err := FuzzyMatch(beforePBC, afterPBC, beforeRBC, afterRBC, read2)
 	if err != nil {
 		output := Trios{}
@@ -120,12 +120,18 @@ func FuzzyMatch(beforePBC, afterPBC, beforeRBC, afterRBC, read string) ([4]int8,
 	coordinates[3] = int8(aln_4[0].Features()[0].Start())
 	// Check if the length of those two are correct
 	length := coordinates[1] - coordinates[0]
-	if length != 12 {
+	if length != 8 {
 		return [4]int8{0, 0, 0, 0}, fmt.Errorf("wrong length for pBC")
 	}
 	// Check if the length of the rBC is correct
 	length_rBC := coordinates[3] - coordinates[2]
-	if length_rBC != 25 {
+	// It turns out that the length of the rBC in this library prep is not very consistent
+	// So we will allow for a range of lengths through 20 -- 25 bp
+	if length_rBC > 25 {
+		return [4]int8{0, 0, 0, 0}, fmt.Errorf("wrong length for rBC")
+	}
+	// Make sure that the
+	if length_rBC < 20 {
 		return [4]int8{0, 0, 0, 0}, fmt.Errorf("wrong length for rBC")
 	}
 	// Return the coordinates of the aligned sequence
